@@ -12,8 +12,8 @@ populationSize = 36
 precision = 3
 Gd_x = Gd_y = -3
 Gg_x = Gg_y = 3
-p_recomb = 0.25
-p_mut = 0.05
+p_recomb = 0.25     # probability of recombination
+p_mut = 0.05        # probability of mutation
 
 class Point:
     def __init__(self, x, y):
@@ -25,6 +25,7 @@ class Point:
         return bin(self.x)[2:].zfill(n), bin(self.y)[2:].zfill(n)
 
 def fun(x,y):
+    # this is the two-variable function for which minimum and maximum will be found
     return 3 * ((1-x)**2)*np.exp(-x**2-(y+1)**2) - 10*(x/5-x**3-y**5)*np.exp(-x**2-y**2)- 1/3*np.exp(-(x+1)**2-y**2)
 
 def get_bd(x, Gd, Gg, n):
@@ -71,13 +72,16 @@ def get_max_point(population):
 
 
 def ff_min(point, max_point):
+    # fitness function for minimum
     return fun(max_point.x, max_point.y) - fun(point.x, point.y)
 
 
 def ff_max(point, min_point):
+    # fitness function for maximum
     return fun(point.x, point.y) - fun(min_point.x, min_point.y)
 
 def tuples_chromosome_grade_max(population):
+    # generates pairs of chromosome and its grade for whole population (max)
     t_list = []
     maxPoint = get_max_point(population)
     minPoint = get_min_point(population)
@@ -90,6 +94,7 @@ def tuples_chromosome_grade_max(population):
     return t_list
 
 def tuples_chromosome_grade_min(population):
+    # generates pairs of chromosome and its grade for whole population (min)
     t_list = []
     maxPoint = get_max_point(population)
     minPoint = get_min_point(population)
@@ -100,6 +105,8 @@ def tuples_chromosome_grade_min(population):
         if ff_min(chrom, maxPoint) != 0:
             t_list.append((chrom, ff_max(chrom, maxPoint)))
     return t_list
+
+# TODO > combine these two functions above into one
 
 def get_probs(grades):
     total = sum(grades)
@@ -119,10 +126,13 @@ def get_cumulative_grades(probabilities):
     return cumulative_grades
 
 def roulette_selection(population, look_for):
+    # use roulette selection to choose which chromosomes will recombinate
     if look_for == 'max':
         pairs = tuples_chromosome_grade_max(population)
-    else:
+    elif look_for == 'min':
         pairs = tuples_chromosome_grade_min(population)
+    else:
+        raise ValueError('Wrong parameter.')
     grades = [x[1] for x in pairs]
     probs = get_probs(grades)
     cumulative_grades = get_cumulative_grades(probs)
@@ -143,6 +153,8 @@ def shuffle(population):
     return random.shuffle(population)
 
 def recombinate_pair(chrom1, chrom2):
+    # recombinates two chromosomes in one point
+    # since chromosome contains two points (x, y), x1, x2 and y1, y2 are recombinated in different points
     n = get_number_of_bits(Gd_x, Gg_x, precision)
     p1 = get_bd_point(chrom1, Gd_x, Gg_x, precision)
     p2 = get_bd_point(chrom2, Gd_x, Gg_x, precision)
@@ -179,6 +191,7 @@ def crossover(population):
 
 
 def chromosome_mutation(chrom, n, mutation_point_x, mutation_point_y):
+    # mutate one chromosome in one point
     bd_point = get_bd_point(chrom, Gd_x, Gg_x, precision)
     x_c, y_c = bd_point.get_binary_coded(n)
     x_coord = list(x_c)
